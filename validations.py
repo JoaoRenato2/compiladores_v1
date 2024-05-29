@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+import datetime
 
 debug = False
 
@@ -31,7 +32,7 @@ def count_occurrences(element, child_name):
 
 def validate_data_type(value, data_type):
     if data_type == "xs:string":
-        return True 
+        return True  # Qualquer valor é válido para xs:string
     elif data_type == "xs:int":
         try:
             int(value)
@@ -44,6 +45,21 @@ def validate_data_type(value, data_type):
             return True
         except ValueError:
             return False
+    elif data_type == "xs:boolean":
+        return value in ["true", "false", "1", "0"]
+    elif data_type == "xs:date":
+        try:
+            datetime.datetime.strptime(value, "%Y-%m-%d")
+            return True
+        except ValueError:
+            return False
+    elif data_type == "xs:dateTime":
+        try:
+            datetime.datetime.strptime(value, "%Y-%m-%dT%H:%M:%S")
+            return True
+        except ValueError:
+            return False
+    # Adicione mais tipos conforme necessário
     return False
 
 def validate_element(element, rules):
@@ -56,11 +72,23 @@ def validate_element(element, rules):
     rule = rules[name]
     data_type = rule['type']
     
-
+    # Verificar tipo de dados
     if data_type and element.text is not None and not validate_data_type(element.text, data_type):
         if debug: print(f"Elemento '{name}' não é do tipo {data_type}")
         return False, f"Elemento '{name}' não é do tipo {data_type}"
     
+    # Verificar atributos
+    for attr_name, attr_rule in rule.get('attributes', {}).items():
+        attr_value = element.get(attr_name)
+        if attr_value is None:
+            if attr_rule.get('minOccurs', 0) > 0:
+                if debug: print(f"Atributo '{attr_name}' é obrigatório e está faltando")
+                return False, f"Atributo '{attr_name}' é obrigatório e está faltando"
+        elif not validate_data_type(attr_value, attr_rule['type']):
+            if debug: print(f"Atributo '{attr_name}' não é do tipo {attr_rule['type']}")
+            return False, f"Atributo '{attr_name}' não é do tipo {attr_rule['type']}"
+
+    # Verificar filhos
     children = list(element)
     children_count = {child.tag: count_occurrences(element, child.tag) for child in children}
     
