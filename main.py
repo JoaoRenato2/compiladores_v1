@@ -6,16 +6,16 @@ def validate_xml_against_xsd(xml_content, xsd_content, debug=False):
     set_debug_extraction(debug)
     if debug: print("Iniciando validação do XML contra o XSD...")
     
-    # Verificar se o XML e o XSD são bem formados
+
     if not is_well_formed_xml(xml_content):
         return False, "XML mal formado"
     if not is_well_formed_xsd(xsd_content):
         return False, "XSD mal formado"
 
-    # Extrair regras do XSD
+
     rules = extract_rules_from_xsd(xsd_content)
 
-    # Verificar o XML contra as regras extraídas do XSD
+
     is_valid, message = validate_xml_against_rules(xml_content, rules)
     if debug: print(message)
     return is_valid, message

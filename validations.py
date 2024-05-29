@@ -56,7 +56,7 @@ def validate_element(element, rules):
     rule = rules[name]
     data_type = rule['type']
     
-    # Verificar tipo de dados
+
     if data_type and element.text is not None and not validate_data_type(element.text, data_type):
         if debug: print(f"Elemento '{name}' não é do tipo {data_type}")
         return False, f"Elemento '{name}' não é do tipo {data_type}"
