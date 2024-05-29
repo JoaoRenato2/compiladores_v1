@@ -1,6 +1,13 @@
 import xml.etree.ElementTree as ET
 
+debug = False
+
+def set_debug(value):
+    global debug
+    debug = value
+
 def extrair_regras_do_xsd(xsd_content):
+    if debug: print("Extraindo regras do XSD...")
     regras = {}
     root = ET.fromstring(xsd_content)
     
@@ -32,9 +39,11 @@ def extrair_regras_do_xsd(xsd_content):
 
         if is_top_level:
             regras[nome_elemento] = regras_elemento
+        if debug: print(f"Regras extraídas para o elemento '{nome_elemento}': {regras_elemento}")
         return nome_elemento, regras_elemento
     
     for element in root.findall("./xs:element", namespaces=namespace):
         extrair_regras(element)
 
+    if debug: print("Regras extraídas do XSD:", regras)
     return regras

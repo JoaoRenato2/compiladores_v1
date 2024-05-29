@@ -1,7 +1,11 @@
-from verificacoes import verificar_xml_bem_formado, verificar_xsd_bem_formado, verificar_xml_contra_regras
-from extracao import extrair_regras_do_xsd
+from verificacoes import verificar_xml_bem_formado, verificar_xsd_bem_formado, verificar_xml_contra_regras, set_debug as set_debug_verificacoes
+from extracao import extrair_regras_do_xsd, set_debug as set_debug_extracao
 
-def validar_xml_contra_xsd(xml_content, xsd_content):
+def validar_xml_contra_xsd(xml_content, xsd_content, debug=False):
+    set_debug_verificacoes(debug)
+    set_debug_extracao(debug)
+    if debug: print("Iniciando validação do XML contra o XSD...")
+    
     # Verifique se o XML e o XSD são bem formados
     if not verificar_xml_bem_formado(xml_content):
         return False, "XML mal formado"
@@ -12,7 +16,9 @@ def validar_xml_contra_xsd(xml_content, xsd_content):
     regras = extrair_regras_do_xsd(xsd_content)
 
     # Verificar o XML contra as regras extraídas do XSD
-    return verificar_xml_contra_regras(xml_content, regras)
+    is_valid, message = verificar_xml_contra_regras(xml_content, regras)
+    if debug: print(message)
+    return is_valid, message
 
 # Exemplo de uso
 if __name__ == "__main__":
@@ -26,5 +32,5 @@ if __name__ == "__main__":
                             </xs:complexType>
                         </xs:element>
                     </xs:schema>'''
-    is_valid, message = validar_xml_contra_xsd(xml_content, xsd_content)
-    print(is_valid, message)  # True se válido, False caso contrário
+    is_valid, message = validar_xml_contra_xsd(xml_content, xsd_content, debug=True)
+    print(is_valid, message)

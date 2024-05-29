@@ -25,6 +25,17 @@ class TestXMLValidator(unittest.TestCase):
                                     </xs:complexType>
                                 </element>
                             </xs:schema>'''
+        self.missing_child_xml = '''<root></root>'''
+        self.valid_xml_multiple = '''<root><child>data1</child><child>data2</child></root>'''
+        self.valid_xsd_multiple = '''<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+                                        <xs:element name="root">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="child" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:schema>'''
     
     def test_verificar_xml_bem_formado(self):
         self.assertTrue(verificar_xml_bem_formado(self.valid_xml))
@@ -61,17 +72,25 @@ class TestXMLValidator(unittest.TestCase):
     def test_validar_xml_contra_xsd(self):
         from main import validar_xml_contra_xsd
         
-        is_valid, message = validar_xml_contra_xsd(self.valid_xml, self.valid_xsd)
+        test_cases = [
+            (self.valid_xml, self.valid_xsd, True, "XML é válido de acordo com as regras do XSD"),
+            (self.invalid_xml, self.valid_xsd, False, "XML mal formado"),
+            (self.valid_xml, self.invalid_xsd, False, "XSD mal formado"),
+            (self.missing_child_xml, self.valid_xsd, False, "Elemento 'child' ocorre menos vezes que o permitido (0 < 1)")
+        ]
+        
+        for xml, xsd, expected_valid, expected_message in test_cases:
+            with self.subTest(xml=xml, xsd=xsd):
+                is_valid, message = validar_xml_contra_xsd(xml, xsd)
+                self.assertEqual(is_valid, expected_valid)
+                self.assertEqual(message, expected_message)
+    
+    def test_validar_xml_contra_xsd_multiple(self):
+        from main import validar_xml_contra_xsd
+        
+        is_valid, message = validar_xml_contra_xsd(self.valid_xml_multiple, self.valid_xsd_multiple)
         self.assertTrue(is_valid)
         self.assertEqual(message, "XML é válido de acordo com as regras do XSD")
-        
-        is_valid, message = validar_xml_contra_xsd(self.invalid_xml, self.valid_xsd)
-        self.assertFalse(is_valid)
-        self.assertEqual(message, "XML mal formado")
-        
-        is_valid, message = validar_xml_contra_xsd(self.valid_xml, self.invalid_xsd)
-        self.assertFalse(is_valid)
-        self.assertEqual(message, "XSD mal formado")
 
 if __name__ == '__main__':
     unittest.main()
