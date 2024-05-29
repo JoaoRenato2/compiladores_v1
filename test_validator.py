@@ -5,8 +5,9 @@ from extraction import extract_rules_from_xsd
 class TestXMLValidator(unittest.TestCase):
     
     def setUp(self):
+        # Definindo exemplos de XML e XSD válidos e inválidos
         self.valid_xml = '''<root><child>data</child></root>'''
-        self.invalid_xml = '''<root><child>data</child>'''
+        self.invalid_xml = '''<root><child>data</child>'''  # XML mal formado
         self.valid_xsd = '''<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
                                 <xs:element name="root">
                                     <xs:complexType>
@@ -24,8 +25,8 @@ class TestXMLValidator(unittest.TestCase):
                                         </xs:sequence>
                                     </xs:complexType>
                                 </element>
-                            </xs:schema>'''
-        self.missing_child_xml = '''<root></root>'''
+                            </xs:schema>'''  # XSD mal formado
+        self.missing_child_xml = '''<root></root>'''  # XML com elemento filho faltando
         self.valid_xml_multiple = '''<root><child>data1</child><child>data2</child></root>'''
         self.valid_xsd_multiple = '''<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
                                         <xs:element name="root">
@@ -46,17 +47,20 @@ class TestXMLValidator(unittest.TestCase):
                                     </xs:element>
                                 </xs:schema>'''
         self.valid_xml_int = '''<root><child>123</child></root>'''
-        self.invalid_xml_int = '''<root><child>abc</child></root>'''
+        self.invalid_xml_int = '''<root><child>abc</child></root>'''  # XML com tipo de dado inválido
 
     def test_is_well_formed_xml(self):
+        # Testando se o XML está bem formado
         self.assertTrue(is_well_formed_xml(self.valid_xml))
         self.assertFalse(is_well_formed_xml(self.invalid_xml))
     
     def test_is_well_formed_xsd(self):
+        # Testando se o XSD está bem formado
         self.assertTrue(is_well_formed_xsd(self.valid_xsd))
         self.assertFalse(is_well_formed_xsd(self.invalid_xsd))
     
     def test_extract_rules_from_xsd(self):
+        # Testando a extração de regras do XSD
         rules = extract_rules_from_xsd(self.valid_xsd)
         expected = {
             'root': {
@@ -75,17 +79,23 @@ class TestXMLValidator(unittest.TestCase):
         self.assertEqual(rules, expected)
     
     def test_validate_xml_against_rules(self):
+        # Testando a validação do XML contra as regras extraídas do XSD
         rules = extract_rules_from_xsd(self.valid_xsd)
         self.assertTrue(validate_xml_against_rules(self.valid_xml, rules)[0])
         self.assertFalse(validate_xml_against_rules(self.missing_child_xml, rules)[0])
     
     def test_validate_xml_against_xsd(self):
+        # Testando a validação do XML contra o XSD diretamente
         from main import validate_xml_against_xsd
         
         test_cases = [
+            # Caso de teste: XML e XSD válidos
             (self.valid_xml, self.valid_xsd, True, "XML é válido de acordo com as regras do XSD"),
+            # Caso de teste: XML mal formado
             (self.invalid_xml, self.valid_xsd, False, "XML mal formado"),
+            # Caso de teste: XSD mal formado
             (self.valid_xml, self.invalid_xsd, False, "XSD mal formado"),
+            # Caso de teste: XML com elemento faltando
             (self.missing_child_xml, self.valid_xsd, False, "Elemento 'child' ocorre menos vezes que o permitido (0 < 1)")
         ]
         
@@ -96,6 +106,7 @@ class TestXMLValidator(unittest.TestCase):
                 self.assertEqual(message, expected_message)
     
     def test_validate_xml_against_xsd_multiple(self):
+        # Testando a validação de XML com múltiplos elementos contra o XSD
         from main import validate_xml_against_xsd
         
         is_valid, message = validate_xml_against_xsd(self.valid_xml_multiple, self.valid_xsd_multiple)
@@ -106,7 +117,9 @@ class TestXMLValidator(unittest.TestCase):
         from main import validate_xml_against_xsd
         
         test_cases = [
+            # Caso de teste: XML com tipo de dado inteiro válido
             (self.valid_xml_int, self.valid_xsd_int, True, "XML é válido de acordo com as regras do XSD"),
+            # Caso de teste: XML com tipo de dado inteiro inválido
             (self.invalid_xml_int, self.valid_xsd_int, False, "Elemento 'child' não é do tipo xs:int")
         ]
         
