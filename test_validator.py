@@ -1,6 +1,6 @@
 import unittest
-from verificacoes import verificar_xml_bem_formado, verificar_xsd_bem_formado, verificar_xml_contra_regras
-from extracao import extrair_regras_do_xsd
+from validations import is_well_formed_xml, is_well_formed_xsd, validate_xml_against_rules
+from extraction import extract_rules_from_xsd
 
 class TestXMLValidator(unittest.TestCase):
     
@@ -48,39 +48,39 @@ class TestXMLValidator(unittest.TestCase):
         self.valid_xml_int = '''<root><child>123</child></root>'''
         self.invalid_xml_int = '''<root><child>abc</child></root>'''
 
-    def test_verificar_xml_bem_formado(self):
-        self.assertTrue(verificar_xml_bem_formado(self.valid_xml))
-        self.assertFalse(verificar_xml_bem_formado(self.invalid_xml))
+    def test_is_well_formed_xml(self):
+        self.assertTrue(is_well_formed_xml(self.valid_xml))
+        self.assertFalse(is_well_formed_xml(self.invalid_xml))
     
-    def test_verificar_xsd_bem_formado(self):
-        self.assertTrue(verificar_xsd_bem_formado(self.valid_xsd))
-        self.assertFalse(verificar_xsd_bem_formado(self.invalid_xsd))
+    def test_is_well_formed_xsd(self):
+        self.assertTrue(is_well_formed_xsd(self.valid_xsd))
+        self.assertFalse(is_well_formed_xsd(self.invalid_xsd))
     
-    def test_extrair_regras_do_xsd(self):
-        regras = extrair_regras_do_xsd(self.valid_xsd)
-        esperado = {
+    def test_extract_rules_from_xsd(self):
+        rules = extract_rules_from_xsd(self.valid_xsd)
+        expected = {
             'root': {
-                'tipo': None,
+                'type': None,
                 'minOccurs': 1,
                 'maxOccurs': 1,
-                'restricoes': {
+                'restrictions': {
                     'child': {
-                        'tipo': 'xs:string',
+                        'type': 'xs:string',
                         'minOccurs': 1,
                         'maxOccurs': 1
                     }
                 }
             }
         }
-        self.assertEqual(regras, esperado)
+        self.assertEqual(rules, expected)
     
-    def test_verificar_xml_contra_regras(self):
-        regras = extrair_regras_do_xsd(self.valid_xsd)
-        self.assertTrue(verificar_xml_contra_regras(self.valid_xml, regras)[0])
-        self.assertFalse(verificar_xml_contra_regras(self.missing_child_xml, regras)[0])
+    def test_validate_xml_against_rules(self):
+        rules = extract_rules_from_xsd(self.valid_xsd)
+        self.assertTrue(validate_xml_against_rules(self.valid_xml, rules)[0])
+        self.assertFalse(validate_xml_against_rules(self.missing_child_xml, rules)[0])
     
-    def test_validar_xml_contra_xsd(self):
-        from main import validar_xml_contra_xsd
+    def test_validate_xml_against_xsd(self):
+        from main import validate_xml_against_xsd
         
         test_cases = [
             (self.valid_xml, self.valid_xsd, True, "XML é válido de acordo com as regras do XSD"),
@@ -91,19 +91,19 @@ class TestXMLValidator(unittest.TestCase):
         
         for xml, xsd, expected_valid, expected_message in test_cases:
             with self.subTest(xml=xml, xsd=xsd):
-                is_valid, message = validar_xml_contra_xsd(xml, xsd)
+                is_valid, message = validate_xml_against_xsd(xml, xsd)
                 self.assertEqual(is_valid, expected_valid)
                 self.assertEqual(message, expected_message)
     
-    def test_validar_xml_contra_xsd_multiple(self):
-        from main import validar_xml_contra_xsd
+    def test_validate_xml_against_xsd_multiple(self):
+        from main import validate_xml_against_xsd
         
-        is_valid, message = validar_xml_contra_xsd(self.valid_xml_multiple, self.valid_xsd_multiple)
+        is_valid, message = validate_xml_against_xsd(self.valid_xml_multiple, self.valid_xsd_multiple)
         self.assertTrue(is_valid)
         self.assertEqual(message, "XML é válido de acordo com as regras do XSD")
 
-    def test_validar_xml_contra_xsd_int(self):
-        from main import validar_xml_contra_xsd
+    def test_validate_xml_against_xsd_int(self):
+        from main import validate_xml_against_xsd
         
         test_cases = [
             (self.valid_xml_int, self.valid_xsd_int, True, "XML é válido de acordo com as regras do XSD"),
@@ -112,7 +112,7 @@ class TestXMLValidator(unittest.TestCase):
         
         for xml, xsd, expected_valid, expected_message in test_cases:
             with self.subTest(xml=xml, xsd=xsd):
-                is_valid, message = validar_xml_contra_xsd(xml, xsd)
+                is_valid, message = validate_xml_against_xsd(xml, xsd)
                 self.assertEqual(is_valid, expected_valid)
                 self.assertEqual(message, expected_message)
 
