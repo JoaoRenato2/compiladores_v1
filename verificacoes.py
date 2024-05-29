@@ -29,6 +29,24 @@ def verificar_xsd_bem_formado(xsd_content):
 def contar_ocorrencias(elemento, nome_filho):
     return sum(1 for filho in elemento if filho.tag == nome_filho)
 
+def verificar_tipo_dado(valor, tipo):
+    if tipo == "xs:string":
+        return True  # Qualquer valor é válido para xs:string
+    elif tipo == "xs:int":
+        try:
+            int(valor)
+            return True
+        except ValueError:
+            return False
+    elif tipo == "xs:float":
+        try:
+            float(valor)
+            return True
+        except ValueError:
+            return False
+    # Adicione mais tipos conforme necessário
+    return False
+
 def verificar_elemento(elemento, regras):
     nome = elemento.tag
     if debug: print(f"Verificando elemento '{nome}'...")
@@ -39,16 +57,16 @@ def verificar_elemento(elemento, regras):
     regra = regras[nome]
     tipo = regra['tipo']
     
-    # Verificar tipo de dados (exemplo para string)
-    if tipo == "xs:string":
-        if elemento.text is not None and not isinstance(elemento.text, str):
-            if debug: print(f"Elemento '{nome}' não é do tipo xs:string")
-            return False, f"Elemento '{nome}' não é do tipo xs:string"
+    # Verificar tipo de dados
+    if tipo and elemento.text is not None and not verificar_tipo_dado(elemento.text, tipo):
+        if debug: print(f"Elemento '{nome}' não é do tipo {tipo}")
+        return False, f"Elemento '{nome}' não é do tipo {tipo}"
     
-    # Verificar restrições nos filhos
-    restricoes = regra.get('restricoes', {})
-    for nome_filho, sub_regra in restricoes.items():
-        ocorrencias = contar_ocorrencias(elemento, nome_filho)
+    filhos = list(elemento)
+    filhos_contagem = {filho.tag: contar_ocorrencias(elemento, filho.tag) for filho in filhos}
+    
+    for nome_filho, sub_regra in regra.get('restricoes', {}).items():
+        ocorrencias = filhos_contagem.get(nome_filho, 0)
         if debug: print(f"Verificando ocorrências do elemento filho '{nome_filho}' em '{nome}'...")
         if ocorrencias < sub_regra['minOccurs']:
             if debug: print(f"Elemento '{nome_filho}' ocorre menos vezes que o permitido ({ocorrencias} < {sub_regra['minOccurs']})")
@@ -58,7 +76,7 @@ def verificar_elemento(elemento, regras):
             return False, f"Elemento '{nome_filho}' ocorre mais vezes que o permitido ({ocorrencias} > {sub_regra['maxOccurs']})"
         
         for filho in elemento.findall(nome_filho):
-            valid, msg = verificar_elemento(filho, restricoes)
+            valid, msg = verificar_elemento(filho, regra['restricoes'])
             if not valid:
                 return valid, msg
     
